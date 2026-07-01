@@ -37,7 +37,7 @@ for item_tax in item.taxes:
 # -------------------------------------------------------------------
 
 if tax_percent:
-    price = cost / (1 - tax_percent)
+    price = cost / (1 - (tax_percent / 100))
 
 price = round(price, 2)
 
