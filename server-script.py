@@ -8,7 +8,7 @@ bom = frappe.get_doc("BOM", bom_name)
 item_code = bom.item
 cost = bom.total_cost
 
-frappe.msgprint(f"Custo: {cost}")
+frappe.msgprint(f"CMV: {cost}")
 
 # -------------------------------------------------------------------
 # ITEM
@@ -29,8 +29,11 @@ for item_tax in item.taxes:
     )
 
     for tax in template.taxes:
-        frappe.msgprint(f"Taxa: {tax.tax_rate}")
-        tax_percent += tax.tax_rate
+        frappe.msgprint(f"{tax.tax_type}: {tax.tax_rate}")
+        if(tax.tax_type == "Mensalidade - HB" or tax.tax_type == "Contabilidade - HB"):
+            cost += tax.tax_rate
+        else:
+            tax_percent += tax.tax_rate
 
 # -------------------------------------------------------------------
 # CÁLCULO
@@ -79,6 +82,8 @@ else:
 
 frappe.db.commit()
 
-frappe.msgprint(f"Preço atualizando utilizando custo {cost} e taxa total de {tax_percent}. Preço final: {price}")
+frappe.msgprint(f"Custo Fixo Final: R${cost}")
+frappe.msgprint(f"Taxa Total Final: {tax_percent}%")
+frappe.msgprint(f"Preço Final: R${price}")
 
 frappe.response["message"] = f"Preço atualizado para {price}"
