@@ -17,32 +17,31 @@ frappe.msgprint(f"CMV: {cost}")
 item = frappe.get_doc("Item", item_code)
 
 # -------------------------------------------------------------------
-# SOMA DAS TAXAS
+# SOMA DAS TAXAS (Template fixo: "Precificação - HB")
 # -------------------------------------------------------------------
 
 tax_percent = 0
 
-for item_tax in item.taxes:
-    template = frappe.get_doc(
-        "Item Tax Template",
-        item_tax.item_tax_template
-    )
+template = frappe.get_doc("Item Tax Template", "Precificação - HB")
 
-    for tax in template.taxes:
-        frappe.msgprint(f"{tax.tax_type}: {tax.tax_rate}")
-        if(tax.tax_type == "Mensalidade - HB" or tax.tax_type == "Contabilidade - HB"):
-            cost += tax.tax_rate
-        else:
-            tax_percent += tax.tax_rate
+for tax in template.taxes:
+    frappe.msgprint(f"{tax.tax_type}: {tax.tax_rate}")
+    if tax.tax_type == "Mensalidade - HB" or tax.tax_type == "Contabilidade - HB":
+        cost += tax.tax_rate
+    else:
+        tax_percent += tax.tax_rate
 
 # -------------------------------------------------------------------
 # CÁLCULO
 # -------------------------------------------------------------------
 
+price = cost
+
 if tax_percent:
     price = cost / (1 - (tax_percent / 100))
 
-price = round(price, 2)
+# Arredonda para cima em múltiplos de 5 (ex: 62 -> 65, 67 -> 70)
+price = -(-price // 5) * 5
 
 # -------------------------------------------------------------------
 # ITEM PRICE
