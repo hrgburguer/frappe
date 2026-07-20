@@ -1,16 +1,41 @@
 bom_name = frappe.form_dict.get("bom")
 item_tax_template_name = frappe.form_dict.get("item_tax_template")
-
 if not bom_name:
     frappe.throw("BOM não informado.")
 if not item_tax_template_name:
     frappe.throw("Item Tax Template não informado.")
-
 round_up = False
 bom = frappe.get_doc("BOM", bom_name)
 item_code = bom.item
 cost = bom.total_cost
 frappe.msgprint(f"CMV: {cost}")
+
+# -------------------------------------------------------------------
+# TAGS DO BOM
+# -------------------------------------------------------------------
+bom_tags_raw = bom.get("_user_tags") or ""
+bom_tags = [t.strip() for t in bom_tags_raw.split(",") if t.strip()]
+
+def add_tag_safe(tag, doctype, docname):
+    tag = tag.strip()
+    if not tag:
+        return
+    if not frappe.db.exists("Tag", tag):
+        frappe.get_doc({
+            "doctype": "Tag",
+            "name": tag
+        }).insert(ignore_permissions=True)
+    if not frappe.db.exists("Tag Link", {
+        "document_type": doctype,
+        "document_name": docname,
+        "tag": tag
+    }):
+        frappe.get_doc({
+            "doctype": "Tag Link",
+            "document_type": doctype,
+            "document_name": docname,
+            "tag": tag
+        }).insert(ignore_permissions=True)
 
 # -------------------------------------------------------------------
 # ITEM
@@ -37,9 +62,7 @@ for tax in template.taxes:
 price = cost
 if tax_percent:
     price = cost / (1 - (tax_percent / 100))
-
 if round_up:
-    # Arredonda para cima em múltiplos de 5 (ex: 62 -> 65, 67 -> 70)
     price = -(-price // 5) * 5
 
 # -------------------------------------------------------------------
@@ -55,10 +78,12 @@ existing = frappe.get_all(
     fields=["name"],
     limit=1
 )
+
 if existing:
+    item_price_name = existing[0].name
     frappe.db.set_value(
         "Item Price",
-        existing[0].name,
+        item_price_name,
         "price_list_rate",
         price
     )
@@ -70,8 +95,16 @@ else:
         "price_list_rate": price
     })
     doc.insert(ignore_permissions=True)
+    item_price_name = doc.name
+
+# -------------------------------------------------------------------
+# APLICA AS TAGS DO BOM NO ITEM PRICE
+# -------------------------------------------------------------------
+for tag in bom_tags:
+    add_tag_safe(tag, "Item Price", item_price_name)
 
 frappe.db.commit()
+
 frappe.msgprint(f"Custo Fixo Final: R${cost}")
 frappe.msgprint(f"Taxa Total Final: {tax_percent}%")
 frappe.msgprint(f"Preço Final: R${price}")
