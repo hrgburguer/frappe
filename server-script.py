@@ -24,7 +24,7 @@ tax_percent = 0
 template = frappe.get_doc("Item Tax Template", item_tax_template_name)
 for tax in template.taxes:
     frappe.msgprint(f"{tax.tax_type}: {tax.tax_rate}")
-    if tax.tax_type == "Mensalidade - HB" or tax.tax_type == "Contabilidade - HB":
+    if tax.tax_type == "INSS sobre Pró-labore - HB" or tax.tax_type == "Contabilidade - HB" or tax.tax_type == "Mensalidade - HB" or tax.tax_type == "Campanha Inteligente do Ifood - HB" :
         cost += tax.tax_rate
     elif tax.tax_type == "Arredondar - HB":
         round_up = True
