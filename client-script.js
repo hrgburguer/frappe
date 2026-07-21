@@ -4,6 +4,17 @@ frappe.ui.form.on("BOM", {
             frappe.prompt(
                 [
                     {
+                        label: "Calcular preço de",
+                        fieldname: "calc_mode",
+                        fieldtype: "Select",
+                        options: [
+                            { label: "Item do BOM (produto final)", value: "bom_item" },
+                            { label: "Itens que compõem o BOM (componentes)", value: "component_items" }
+                        ],
+                        default: "bom_item",
+                        reqd: 1
+                    },
+                    {
                         label: "Item Tax Template",
                         fieldname: "item_tax_template",
                         fieldtype: "Link",
@@ -16,7 +27,8 @@ frappe.ui.form.on("BOM", {
                         method: "update_item_sales_price",
                         args: {
                             bom: frm.doc.name,
-                            item_tax_template: values.item_tax_template
+                            item_tax_template: values.item_tax_template,
+                            calc_mode: values.calc_mode
                         },
                         freeze: true,
                         freeze_message: "Atualizando preço...",
@@ -25,7 +37,7 @@ frappe.ui.form.on("BOM", {
                         }
                     });
                 },
-                "Selecione o Item Tax Template",
+                "Configurar atualização de preço",
                 "Atualizar"
             );
         });
